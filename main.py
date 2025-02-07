@@ -1,14 +1,14 @@
 import os
 import logging
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, filters, ContextTypes
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 from dotenv import load_dotenv
 from flask import Flask
 import threading
 import requests
 import time
 
-# Configuration
+# Configuration du logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -27,7 +27,7 @@ WELCOME_IMAGE = "https://i.pinimg.com/originals/e3/bd/c0/e3bdc0eb3a3addb16affb83
 INFO_IMAGES = [
     "https://w7.pngwing.com/pngs/218/24/png-transparent-white-and-green-number-1-number-number-1-blue-image-file-formats-text-thumbnail.png",
     "https://cdn-icons-png.flaticon.com/512/8068/8068073.png",
-    "URL_IMAGE_3"
+    "https://example.com/image3.png"
 ]
 
 CASINO_PROOFS = [
@@ -63,18 +63,31 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
+    keyboard = [
+        [InlineKeyboardButton("🔴 Informations sur les bots", callback_data='info_bots')],
+        [InlineKeyboardButton("🔵 Retrait du casino", callback_data='casino_withdraw')],
+        [InlineKeyboardButton("✍️ Écrivez-moi à", url="https://t.me/votre_username")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
     if query.data == 'info_bots':
         await query.edit_message_text(
-            "ℹ️ Informations importantes sur les bots:\n\n"
-            "• Les bots sont des assistants automatisés\n"
-            "• Ils peuvent vous aider pour diverses tâches\n"
-            "• Restez vigilant face aux demandes suspectes"
+            text=(
+                "ℹ️ Informations importantes sur les bots:\n\n"
+                "• Les bots sont des assistants automatisés\n"
+                "• Ils peuvent vous aider pour diverses tâches\n"
+                "• Restez vigilant face aux demandes suspectes"
+            ),
+            reply_markup=reply_markup
         )
 
     elif query.data == 'casino_withdraw':
         await query.edit_message_text(
-            "🛑 Retrait du casino:\n\n"
-            "Voici comment retirer vos gains en toute sécurité. Assurez-vous de suivre les instructions à la lettre pour éviter tout problème."
+            text=(
+                "🛑 Retrait du casino:\n\n"
+                "Voici comment retirer vos gains en toute sécurité. Assurez-vous de suivre les instructions à la lettre pour éviter tout problème."
+            ),
+            reply_markup=reply_markup
         )
         for proof in CASINO_PROOFS:
             await query.message.reply_photo(photo=proof, caption="Preuve de retrait réussi 💸")
