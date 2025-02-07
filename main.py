@@ -1,8 +1,12 @@
 import os
 import logging
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, filters, ContextTypes
 from dotenv import load_dotenv
+from flask import Flask
+import threading
+import requests
+import time
 
 # Configuration
 logging.basicConfig(
@@ -11,16 +15,28 @@ logging.basicConfig(
 )
 load_dotenv()
 
+# Flask app pour garder le bot actif
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot actif!"
+
 # Configuration des messages et images
-WELCOME_IMAGE = "https://i.pinimg.com/originals/e3/bd/c0/e3bdc0eb3a3addb16affb830442286d2.png"  # À remplacer par votre URL
+WELCOME_IMAGE = "https://i.pinimg.com/originals/e3/bd/c0/e3bdc0eb3a3addb16affb830442286d2.png"
 INFO_IMAGES = [
-    "https://w7.pngwing.com/pngs/218/24/png-transparent-white-and-green-number-1-number-number-1-blue-image-file-formats-text-thumbnail.png",  # À remplacer par vos URLs
+    "https://w7.pngwing.com/pngs/218/24/png-transparent-white-and-green-number-1-number-number-1-blue-image-file-formats-text-thumbnail.png",
     "https://cdn-icons-png.flaticon.com/512/8068/8068073.png",
     "URL_IMAGE_3"
 ]
 
+CASINO_PROOFS = [
+    "https://example.com/proof1.jpg",
+    "https://example.com/proof2.jpg",
+    "https://example.com/proof3.jpg"
+]
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Message d'accueil avec image
     await update.message.reply_photo(
         photo=WELCOME_IMAGE,
         caption=(
@@ -30,15 +46,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Vous pouvez gagner de l'argent sans rien faire, car j'ai déjà fait tout le programme pour vous."
         )
     )
-    
-    # Création des boutons flottants
+
     keyboard = [
         [InlineKeyboardButton("🔴 Informations sur les bots", callback_data='info_bots')],
         [InlineKeyboardButton("🔵 Retrait du casino", callback_data='casino_withdraw')],
         [InlineKeyboardButton("✍️ Écrivez-moi à", url="https://t.me/votre_username")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    
+
     await update.message.reply_text(
         "Choisissez une option ci-dessous:",
         reply_markup=reply_markup
@@ -58,15 +73,30 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif query.data == 'casino_withdraw':
         await query.edit_message_text(
-            "🚫 Retrait du casino:\n\n"
+            "🛑 Retrait du casino:\n\n"
             "Voici comment retirer vos gains en toute sécurité. Assurez-vous de suivre les instructions à la lettre pour éviter tout problème."
         )
+        for proof in CASINO_PROOFS:
+            await query.message.reply_photo(photo=proof, caption="Preuve de retrait réussi 💸")
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Gestion des messages texte généraux
-    await update.message.reply_text(
-        "Pour accéder aux options, utilisez le menu ou tapez /start"
-    )
+# Fonction pour garder l'application active
+def keep_alive():
+    def run():
+        app.run(host='0.0.0.0', port=8080)
+
+    thread = threading.Thread(target=run)
+    thread.start()
+
+# Ping du serveur toutes les 5 minutes
+def auto_ping():
+    while True:
+        try:
+            requests.get("https://votre-app-render-url.com")  # Remplace par l'URL Render de ton app
+            logging.info("Ping envoyé pour garder l'application active")
+        except Exception as e:
+            logging.error(f"Erreur lors du ping: {e}")
+        time.sleep(300)  # Ping toutes les 5 minutes
+
 
 def main():
     token = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -75,13 +105,16 @@ def main():
         return
 
     application = Application.builder().token(token).build()
-
-    # Handlers
+    
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CallbackQueryHandler(handle_button))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    # Lancement du bot
+    keep_alive()
+
+    # Lancer la tâche de ping automatique
+    ping_thread = threading.Thread(target=auto_ping)
+    ping_thread.start()
+
     print("Bot démarré...")
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
