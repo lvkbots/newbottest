@@ -24,28 +24,21 @@ def home():
 
 # Configuration des messages et images
 WELCOME_IMAGE = "https://i.pinimg.com/originals/e3/bd/c0/e3bdc0eb3a3addb16affb830442286d2.png"
-INFO_IMAGES = [
-    "https://w7.pngwing.com/pngs/218/24/png-transparent-white-and-green-number-1-number-number-1-blue-image-file-formats-text-thumbnail.png",
-    "https://cdn-icons-png.flaticon.com/512/8068/8068073.png",
-    "https://example.com/image3.png"
-]
+TEXT_PRINCIPAL_1 = "BILL GATES, BONJOUR ❗\n\nJe suis un programmeur vénézuélien et je connais la combine pour retirer l'argent du jeu des casinos.\n\n1800 personnes ont déjà gagné avec moi. Et je peux vous garantir en toute confiance que vous gagnerez.\n\nVous pouvez gagner de l'argent sans rien faire, car j'ai déjà fait tout le programme pour vous."
+VIDEO_URL = "https://youtube.com/shorts/wCvzIiQTT_4?si=MYYP5TR-BPr_x0VW"
+TEXT_PRINCIPAL_2 = "Voici des témoignages vidéo de personnes ayant déjà gagné grâce à notre programme. Vous pouvez être le prochain gagnant !"
 
 CASINO_PROOFS = [
-    {"url": "https://cdn-icons-png.flaticon.com/512/8068/8068073.png", "caption": "💸 Preuve de retrait #1 - Gagnant: Alice, Montant: 500€"},
-    {"url": "https://w7.pngwing.com/pngs/218/24/png-transparent-white-and-green-number-1-number-number-1-blue-image-file-formats-text-thumbnail.png", "caption": "💸 Preuve de retrait #2 - Gagnant: Bob, Montant: 750€"},
+    {"url": "https://example.com/proof1.jpg", "caption": "💸 Preuve de retrait #1 - Gagnant: Alice, Montant: 500€"},
+    {"url": "https://example.com/proof2.jpg", "caption": "💸 Preuve de retrait #2 - Gagnant: Bob, Montant: 750€"},
     {"url": "https://example.com/proof3.jpg", "caption": "💸 Preuve de retrait #3 - Gagnant: Charlie, Montant: 1000€"}
 ]
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_photo(
-        photo=WELCOME_IMAGE,
-        caption=(
-            "BILL GATES, BONJOUR ❗\n\n"
-            "Je suis un programmeur vénézuélien et je connais la combine pour retirer l'argent du jeu des casinos.\n\n"
-            "1800 personnes ont déjà gagné avec moi. Et je peux vous garantir en toute confiance que vous gagnerez.\n\n"
-            "Vous pouvez gagner de l'argent sans rien faire, car j'ai déjà fait tout le programme pour vous."
-        )
-    )
+    await update.message.reply_photo(photo=WELCOME_IMAGE)
+    await update.message.reply_text(TEXT_PRINCIPAL_1)
+    await update.message.reply_video(video=VIDEO_URL)
+    await update.message.reply_text(TEXT_PRINCIPAL_2)
 
     keyboard = [
         [InlineKeyboardButton("🔴 Informations sur les bots", callback_data='info_bots')],
@@ -129,7 +122,7 @@ def main():
     ping_thread.start()
 
     logging.info("Bot démarré et en cours d'exécution...")
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    application.run_polling()
 
 if __name__ == '__main__':
     main()
