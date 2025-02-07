@@ -1,73 +1,102 @@
 import os
 import logging
-from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 from dotenv import load_dotenv
 
-# Chargement des variables d'environnement
-load_dotenv()
-
-# Configuration du logging
+# Configuration
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
+load_dotenv()
 
-# Gestionnaire de commandes
+# Configuration des messages et images
+WELCOME_IMAGE = "https://i.pinimg.com/originals/e3/bd/c0/e3bdc0eb3a3addb16affb830442286d2.png"  # À remplacer par votre URL
+INFO_IMAGES = [
+    "https://w7.pngwing.com/pngs/218/24/png-transparent-white-and-green-number-1-number-number-1-blue-image-file-formats-text-thumbnail.png",  # À remplacer par vos URLs
+    "https://cdn-icons-png.flaticon.com/512/8068/8068073.png",
+    "URL_IMAGE_3"
+]
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Message d'accueil avec image
+    await update.message.reply_photo(
+        photo=WELCOME_IMAGE,
+        caption="🌟 BIENVENUE ! 🌟\n\nJe suis votre assistant d'information.\nChoisissez une option ci-dessous:"
+    )
+    
+    # Création du clavier personnalisé
+    keyboard = [
+        [KeyboardButton("🔴 Informations sur les bots")],
+        [KeyboardButton("🔵 Centre d'information")],
+        [KeyboardButton("✍️ Écrivez-moi à")]
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+    
     await update.message.reply_text(
-        "👋 Bonjour! Je suis votre assistant bot. Voici mes commandes disponibles:\n"
-        "/start - Afficher ce message\n"
-        "/help - Obtenir de l'aide\n"
-        "/info - Informations sur le bot"
+        "Sélectionnez une option:",
+        reply_markup=reply_markup
     )
 
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "🤖 Comment puis-je vous aider?\n"
-        "- Envoyez-moi un message et je vous répondrai\n"
-        "- Utilisez /info pour plus d'informations"
-    )
+async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg = update.message.text
 
-async def info(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "ℹ️ Information sur le bot:\n"
-        "Version: 1.0.0\n"
-        "Créé en 2025\n"
-        "Hébergé sur Render"
-    )
+    if "Informations sur les bots" in msg:
+        await update.message.reply_text(
+            "ℹ️ Informations importantes sur les bots:\n\n"
+            "• Les bots sont des assistants automatisés\n"
+            "• Ils peuvent vous aider pour diverses tâches\n"
+            "• Restez vigilant face aux demandes suspectes"
+        )
 
-# Gestionnaire de messages
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(f"Vous avez dit: {update.message.text}")
+    elif "Centre d'information" in msg:
+        # Envoi des images d'information
+        for image_url in INFO_IMAGES:
+            await update.message.reply_photo(
+                photo=image_url,
+                caption="Information importante à connaître 📚"
+            )
+        
+        await update.message.reply_text(
+            "Voici quelques informations importantes à retenir:\n\n"
+            "1. Vérifiez toujours les sources\n"
+            "2. Ne partagez jamais d'informations sensibles\n"
+            "3. En cas de doute, demandez conseil"
+        )
 
-async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    logging.error(f"Une erreur s'est produite: {context.error}")
-    if update:
-        await update.message.reply_text("Désolé, une erreur s'est produite.")
+    elif "Écrivez-moi à" in msg:
+        # Création d'un bouton inline pour le contact
+        keyboard = [[InlineKeyboardButton("📧 Contacter le support", url="https://t.me/votre_username")]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await update.message.reply_text(
+            "Pour me contacter directement:\n"
+            "Cliquez sur le bouton ci-dessous 👇",
+            reply_markup=reply_markup
+        )
+
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Gestion des messages texte généraux
+    if not update.message.text.startswith('/'):
+        await update.message.reply_text(
+            "Pour accéder aux options, utilisez le menu ou tapez /start"
+        )
 
 def main():
-    # Récupération du token depuis les variables d'environnement
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     if not token:
-        logging.error("Token Telegram non trouvé!")
+        logging.error("Token Telegram manquant!")
         return
 
-    # Création de l'application
     application = Application.builder().token(token).build()
 
-    # Ajout des gestionnaires de commandes
+    # Handlers
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("help", help_command))
-    application.add_handler(CommandHandler("info", info))
-    
-    # Gestionnaire de messages
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
-    
-    # Gestionnaire d'erreurs
-    application.add_error_handler(error_handler)
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_button))
 
-    # Démarrage du bot
+    # Lancement du bot
+    print("Bot démarré...")
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == '__main__':
