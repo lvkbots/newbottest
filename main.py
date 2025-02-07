@@ -31,9 +31,9 @@ INFO_IMAGES = [
 ]
 
 CASINO_PROOFS = [
-    "https://example.com/proof1.jpg",
-    "https://example.com/proof2.jpg",
-    "https://example.com/proof3.jpg"
+    {"url": "https://cdn-icons-png.flaticon.com/512/8068/8068073.png", "caption": "💸 Preuve de retrait #1 - Gagnant: Alice, Montant: 500€"},
+    {"url": "https://w7.pngwing.com/pngs/218/24/png-transparent-white-and-green-number-1-number-number-1-blue-image-file-formats-text-thumbnail.png", "caption": "💸 Preuve de retrait #2 - Gagnant: Bob, Montant: 750€"},
+    {"url": "https://example.com/proof3.jpg", "caption": "💸 Preuve de retrait #3 - Gagnant: Charlie, Montant: 1000€"}
 ]
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -49,7 +49,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     keyboard = [
         [InlineKeyboardButton("🔴 Informations sur les bots", callback_data='info_bots')],
-        [InlineKeyboardButton("🔵 Retrait du casino", callback_data='casino_withdraw')],
+        [InlineKeyboardButton("🔵 Preuve de paiement", callback_data='payment_proof')],
         [InlineKeyboardButton("✍️ Écrivez-moi à", url="https://t.me/votre_username")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -65,7 +65,7 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     keyboard = [
         [InlineKeyboardButton("🔴 Informations sur les bots", callback_data='info_bots')],
-        [InlineKeyboardButton("🔵 Retrait du casino", callback_data='casino_withdraw')],
+        [InlineKeyboardButton("🔵 Preuve de paiement", callback_data='payment_proof')],
         [InlineKeyboardButton("✍️ Écrivez-moi à", url="https://t.me/votre_username")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -81,16 +81,16 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=reply_markup
         )
 
-    elif query.data == 'casino_withdraw':
+    elif query.data == 'payment_proof':
         await query.edit_message_text(
             text=(
-                "🛑 Retrait du casino:\n\n"
-                "Voici comment retirer vos gains en toute sécurité. Assurez-vous de suivre les instructions à la lettre pour éviter tout problème."
+                "🛑 Preuve de paiement:\n\n"
+                "Voici les preuves de paiements réussis. Assurez-vous de suivre les instructions à la lettre pour éviter tout problème."
             ),
             reply_markup=reply_markup
         )
         for proof in CASINO_PROOFS:
-            await query.message.reply_photo(photo=proof, caption="Preuve de retrait réussi 💸")
+            await query.message.reply_photo(photo=proof["url"], caption=proof["caption"])
 
 # Fonction pour garder l'application active
 def keep_alive():
@@ -128,7 +128,7 @@ def main():
     ping_thread = threading.Thread(target=auto_ping)
     ping_thread.start()
 
-    print("Bot démarré...")
+    logging.info("Bot démarré et en cours d'exécution...")
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == '__main__':
