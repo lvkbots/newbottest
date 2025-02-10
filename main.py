@@ -1,6 +1,6 @@
 import logging
 import os
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 from flask import Flask
 import threading
@@ -20,6 +20,27 @@ def home():
 
 # Token du bot
 TOKEN = '7184666905:AAFd2arfmIFZ86cp9NNVp57dKkH6hAVi4iM'
+
+# URLs des images
+MAIN_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png"
+
+# Images pour les preuves de paiement
+PAYMENT_PROOF_IMAGES = [
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",  # Image 1
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",  # Image 2
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",  # Image 3
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",  # Image 4
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png"   # Image 5
+]
+
+# Images pour les informations
+INFO_IMAGES = [
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",  # Info Image 1
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",  # Info Image 2
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",  # Info Image 3
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",  # Info Image 4
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png"   # Info Image 5
+]
 
 def create_keyboard():
     """Crée le clavier avec les boutons"""
@@ -41,21 +62,46 @@ Je suis un programmeur vénézuélien et je connais la combine pour retirer l'ar
 Vous pouvez gagner de l'argent sans rien faire, car j'ai déjà fait tout le programme pour vous."""
     
     reply_markup = create_keyboard()
-    await update.message.reply_text(message, reply_markup=reply_markup)
+    await update.message.reply_photo(
+        photo=MAIN_IMAGE,
+        caption=message,
+        reply_markup=reply_markup
+    )
 
 async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Gère les clics sur les boutons"""
     query = update.callback_query
     await query.answer()
 
-    messages = {
-        'info_bots': "Informations sur les bots...",
-        'casino_withdrawal': "Retrait du casino...",
-        'write_to_me': "Contactez-moi directement..."
-    }
-
-    if query.data in messages:
-        await query.edit_message_text(text=messages[query.data])
+    if query.data == 'casino_withdrawal':
+        # Envoie les 5 images de preuve de paiement
+        media_group = [InputMediaPhoto(media=url) for url in PAYMENT_PROOF_IMAGES]
+        await context.bot.send_media_group(
+            chat_id=update.effective_chat.id,
+            media=media_group
+        )
+        await query.edit_message_caption(
+            caption="Voici les preuves de paiement récentes ! 💰\nContactez-nous pour plus d'informations.",
+            reply_markup=create_keyboard()
+        )
+    
+    elif query.data == 'info_bots':
+        # Envoie les 5 images d'information
+        media_group = [InputMediaPhoto(media=url) for url in INFO_IMAGES]
+        await context.bot.send_media_group(
+            chat_id=update.effective_chat.id,
+            media=media_group
+        )
+        await query.edit_message_caption(
+            caption="Voici les informations sur nos bots ! 🤖\nContactez-nous pour en savoir plus.",
+            reply_markup=create_keyboard()
+        )
+    
+    elif query.data == 'write_to_me':
+        await query.edit_message_caption(
+            caption="Contactez-moi directement pour commencer...",
+            reply_markup=create_keyboard()
+        )
 
 def keep_alive():
     """Maintient le bot actif avec Flask"""
