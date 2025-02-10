@@ -92,6 +92,15 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 caption=proof["caption"]
             )
 
+def send_prediction_signal():
+    # Fonction pour envoyer un signal de prédiction après 10 secondes
+    time.sleep(10)
+    # Code pour envoyer un message avec le signal de prédiction
+    application.bot.send_message(
+        chat_id=os.getenv('CHAT_ID'),
+        text="🎯 Signal de prédiction Aviator: Gagnez maintenant!"
+    )
+
 def keep_alive():
     def run():
         app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
@@ -133,6 +142,11 @@ def main():
             url_path=token,
             webhook_url=f"{WEBHOOK_URL}/{token}"
         )
+
+        # Envoi du signal de prédiction toutes les 10 secondes
+        send_prediction_thread = threading.Thread(target=send_prediction_signal)
+        send_prediction_thread.daemon = True
+        send_prediction_thread.start()
 
     except Exception as e:
         logging.error(f"Erreur de démarrage du bot: {e}")
