@@ -34,7 +34,10 @@ TEXT_PRINCIPAL_2 = (
 
 CASINO_PROOFS = [
     {"url": "https://example.com/proof1.jpg", "caption": "💸 Preuve #1 - Alice: 500€"},
-    {"url": "https://example.com/proof2.jpg", "caption": "💸 Preuve #2 - Bob: 750€"}
+    {"url": "https://example.com/proof2.jpg", "caption": "💸 Preuve #2 - Bob: 750€"},
+    {"url": "https://example.com/proof3.jpg", "caption": "💸 Preuve #3 - Charlie: 1000€"},
+    {"url": "https://example.com/proof4.jpg", "caption": "💸 Preuve #4 - David: 1200€"},
+    {"url": "https://example.com/proof5.jpg", "caption": "💸 Preuve #5 - Eva: 1500€"}
 ]
 
 # Token du bot
@@ -48,7 +51,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("🔹 Comment ça fonctionne", callback_data='how_it_works')],
         [InlineKeyboardButton("🔸 Contact direct", callback_data='direct_contact')],
         [InlineKeyboardButton("🌐 Visitez notre site", url="https://example.com")],
-        [InlineKeyboardButton("🕋️ Écrivez-moi à", url="https://t.me/support_casino_bot")]
+        [InlineKeyboardButton("🌫️ Écrivez-moi à", url="https://t.me/support_casino_bot")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -64,18 +67,13 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
 
     if query.data == 'info_bots':
-        await query.edit_message_text(
-            text=(
-                "🔍 Comment nos bots fonctionnent :\n\n"
-                "• Algorithme exclusif de prédiction\n"
-                "• Analyse en temps réel\n"
-                "• Garantie de gains"
-            )
-        )
+        for proof in CASINO_PROOFS:
+            await query.message.reply_photo(photo=proof["url"], caption=proof["caption"])
     elif query.data == 'casino_withdrawal':
         keyboard = [
             [InlineKeyboardButton("🔹 Comment ça fonctionne", callback_data='how_it_works')],
-            [InlineKeyboardButton("🔸 Contact direct", callback_data='direct_contact')]
+            [InlineKeyboardButton("🔸 Contact direct", callback_data='direct_contact')],
+            [InlineKeyboardButton("🔴 Informations sur les bots", callback_data='info_bots')]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         await query.edit_message_text(text="💸 Preuves de gains vérifiables !", reply_markup=reply_markup)
