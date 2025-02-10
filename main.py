@@ -24,7 +24,7 @@ def home():
 
 # Configuration des messages et images
 WELCOME_IMAGE = "https://i.pinimg.com/originals/e3/bd/c0/e3bdc0eb3a3addb16affb830442286d2.png"
-TEXT_PRINCIPAL_1 = "🎲 Programme de gains au casino 💰\n\n1800 personnes ont déjà gagné avec notre méthode unique.\n\nGagnez de l'argent sans effort !"
+TEXT_PRINCIPAL_1 = "🌪 Programme de gains au casino 💰\n\n1800 personnes ont déjà gagné avec notre méthode unique.\n\nGagnez de l'argent sans effort !"
 VIDEO_URL = "https://youtube.com/shorts/wCvzIiQTT_4?si=MYYP5TR-BPr_x0VW"
 TEXT_PRINCIPAL_2 = "🏆 Témoignages de nos gagnants !"
 FOOTER_IMAGE = "https://aviator.com.in/wp-content/uploads/2024/04/Aviator-Predictor-in-India.webp"
@@ -108,6 +108,7 @@ def auto_ping():
         time.sleep(300)
 
 def main():
+    global application
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     if not token:
         logging.error("Token Telegram manquant!")
