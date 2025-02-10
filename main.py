@@ -21,10 +21,12 @@ def home():
 
 # Configuration des messages et images
 WELCOME_IMAGE = "https://i.pinimg.com/originals/e3/bd/c0/e3bdc0eb3a3addb16affb830442286d2.png"
-TEXT_PRINCIPAL_1 = "🌪 Programme de gains au casino 💰\n\n1800 personnes ont déjà gagné avec notre méthode unique.\n\nGagnez de l'argent sans effort !"
-VIDEO_URL = "https://youtube.com/shorts/wCvzIiQTT_4?si=MYYP5TR-BPr_x0VW"
-TEXT_PRINCIPAL_2 = "🏆 Témoignages de nos gagnants !"
-FOOTER_IMAGE = "https://aviator.com.in/wp-content/uploads/2024/04/Aviator-Predictor-in-India.webp"
+TEXT_PRINCIPAL = (
+    "BILL GATES, BONJOUR !\n\n"
+    "Je suis un programmeur vénézuélien et je connais la combine pour retirer l'argent du jeu des casinos.\n\n"
+    "1800 personnes ont déjà gagné avec moi. Et je peux vous garantir en toute confiance que vous gagnerez.\n\n"
+    "Vous pouvez gagner de l'argent sans rien faire, car j'ai déjà fait tout le programme pour vous."
+)
 
 CASINO_PROOFS = [
     {"url": "https://example.com/proof1.jpg", "caption": "💸 Preuve #1 - Alice: 500€"},
@@ -38,14 +40,14 @@ TOKEN = '7184666905:AAFd2arfmIFZ86cp9NNVp57dKkH6hAVi4iM'  # Remplacez ce token p
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("💡 Comment ça marche", callback_data='how_works')],
-        [InlineKeyboardButton("💰 Preuves de gains", callback_data='payment_proof')],
+        [InlineKeyboardButton("💰 Retrait du casino", callback_data='casino_withdrawal')],
         [InlineKeyboardButton("📞 Contactez-nous", url="https://t.me/support_casino_bot")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     await update.message.reply_photo(
         photo=WELCOME_IMAGE, 
-        caption=TEXT_PRINCIPAL_1,
+        caption=TEXT_PRINCIPAL,
         reply_markup=reply_markup
     )
 
@@ -54,13 +56,6 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
-    keyboard = [
-        [InlineKeyboardButton("💡 Comment ça marche", callback_data='how_works')],
-        [InlineKeyboardButton("💰 Preuves de gains", callback_data='payment_proof')],
-        [InlineKeyboardButton("📞 Contactez-nous", url="https://t.me/support_casino_bot")]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
     if query.data == 'how_works':
         await query.edit_message_caption(
             caption=(
@@ -68,15 +63,10 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "• Algorithme exclusif de prédiction\n"
                 "• Analyse en temps réel\n"
                 "• Garantie de gains"
-            ),
-            reply_markup=reply_markup
+            )
         )
-
-    elif query.data == 'payment_proof':
-        await query.edit_message_caption(
-            caption="💸 Preuves de gains vérifiables !",
-            reply_markup=reply_markup
-        )
+    elif query.data == 'casino_withdrawal':
+        await query.edit_message_caption(caption="💸 Preuves de gains vérifiables !")
         for proof in CASINO_PROOFS:
             await query.message.reply_photo(
                 photo=proof["url"], 
@@ -90,15 +80,6 @@ def keep_alive():
     thread = threading.Thread(target=run)
     thread.start()
 
-# Fonction pour envoyer un signal de prédiction après 10 secondes
-def send_prediction_signal():
-    time.sleep(10)
-    # Envoyer un signal de prédiction
-    application.bot.send_message(
-        chat_id=os.getenv('CHAT_ID'),
-        text="🎯 Signal de prédiction Aviator: Gagnez maintenant!"
-    )
-
 # Fonction principale
 def main():
     global application
@@ -109,11 +90,6 @@ def main():
         application.add_handler(CallbackQueryHandler(handle_button))
 
         keep_alive()
-
-        # Thread pour envoyer un signal de prédiction après 10 secondes
-        prediction_thread = threading.Thread(target=send_prediction_signal)
-        prediction_thread.daemon = True
-        prediction_thread.start()
 
         # Lancer le bot
         application.run_polling()
