@@ -2,10 +2,8 @@ import os
 import logging
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
-from dotenv import load_dotenv
 from flask import Flask, request
 import threading
-import requests
 import time
 
 # Configuration du logging
@@ -13,7 +11,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
-load_dotenv()
 
 # Flask app pour garder le bot actif
 app = Flask(__name__)
@@ -22,127 +19,107 @@ app = Flask(__name__)
 def home():
     return "Bot actif!"
 
-# Endpoint pour le webhook
-@app.route(f'/{os.getenv("TELEGRAM_BOT_TOKEN")}', methods=['POST'])
-def webhook():
-    update = Update.de_json(request.get_json(force=True), application.bot)
-    application.process_update(update)
-    return 'ok'
-
 # Configuration des messages et images
 WELCOME_IMAGE = "https://i.pinimg.com/originals/e3/bd/c0/e3bdc0eb3a3addb16affb830442286d2.png"
-TEXT_PRINCIPAL_1 = "BILL GATES, BONJOUR ❗\n\nJe suis un programmeur vénézuélien et je connais la combine pour retirer l'argent du jeu des casinos.\n\n1800 personnes ont déjà gagné avec moi. Et je peux vous garantir en toute confiance que vous gagnerez.\n\nVous pouvez gagner de l'argent sans rien faire, car j'ai déjà fait tout le programme pour vous."
+TEXT_PRINCIPAL_1 = "🌪 Programme de gains au casino 💰\n\n1800 personnes ont déjà gagné avec notre méthode unique.\n\nGagnez de l'argent sans effort !"
 VIDEO_URL = "https://youtube.com/shorts/wCvzIiQTT_4?si=MYYP5TR-BPr_x0VW"
-TEXT_PRINCIPAL_2 = "Voici des témoignages vidéo de personnes ayant déjà gagné grâce à notre programme. Vous pouvez être le prochain gagnant !"
+TEXT_PRINCIPAL_2 = "🏆 Témoignages de nos gagnants !"
 FOOTER_IMAGE = "https://aviator.com.in/wp-content/uploads/2024/04/Aviator-Predictor-in-India.webp"
 
 CASINO_PROOFS = [
-    {"url": "https://example.com/proof1.jpg", "caption": "💸 Preuve de paiement #1 - Gagnant: Alice, Montant: 500€"},
-    {"url": "https://example.com/proof2.jpg", "caption": "💸 Preuve de paiement #2 - Gagnant: Bob, Montant: 750€"},
-    {"url": "https://example.com/proof3.jpg", "caption": "💸 Preuve de paiement #3 - Gagnant: Charlie, Montant: 1000€"}
+    {"url": "https://example.com/proof1.jpg", "caption": "💸 Preuve #1 - Alice: 500€"},
+    {"url": "https://example.com/proof2.jpg", "caption": "💸 Preuve #2 - Bob: 750€"}
 ]
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_photo(photo=WELCOME_IMAGE)
-    await update.message.reply_text(TEXT_PRINCIPAL_1)
-    await update.message.reply_video(video=VIDEO_URL)
-    await update.message.reply_text(TEXT_PRINCIPAL_2)
+# Token du bot
+TOKEN = '7184666905:AAFd2arfmIFZ86cp9NNVp57dKkH6hAVi4iM'  # Remplacez ce token par celui que vous avez
 
+# Fonction de démarrage du bot
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        [InlineKeyboardButton("🔴 Informations sur les bots", callback_data='info_bots')],
-        [InlineKeyboardButton("🔵 Preuve de paiement", callback_data='payment_proof')],
-        [InlineKeyboardButton("✍️ Écrivez-moi à", url="https://t.me/votre_username")]
+        [InlineKeyboardButton("💡 Comment ça marche", callback_data='how_works')],
+        [InlineKeyboardButton("💰 Preuves de gains", callback_data='payment_proof')],
+        [InlineKeyboardButton("📞 Contactez-nous", url="https://t.me/support_casino_bot")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text(
-        "Choisissez une option ci-dessous:",
+    await update.message.reply_photo(
+        photo=WELCOME_IMAGE, 
+        caption=TEXT_PRINCIPAL_1,
         reply_markup=reply_markup
     )
 
-    await update.message.reply_photo(photo=FOOTER_IMAGE)
-
+# Fonction pour gérer les boutons
 async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
     keyboard = [
-        [InlineKeyboardButton("🔴 Informations sur les bots", callback_data='info_bots')],
-        [InlineKeyboardButton("🔵 Preuve de paiement", callback_data='payment_proof')],
-        [InlineKeyboardButton("✍️ Écrivez-moi à", url="https://t.me/votre_username")]
+        [InlineKeyboardButton("💡 Comment ça marche", callback_data='how_works')],
+        [InlineKeyboardButton("💰 Preuves de gains", callback_data='payment_proof')],
+        [InlineKeyboardButton("📞 Contactez-nous", url="https://t.me/support_casino_bot")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    if query.data == 'info_bots':
-        await query.edit_message_text(
-            text=( 
-                "ℹ️ Informations importantes sur les bots:\n\n"
-                "• Les bots sont des assistants automatisés\n"
-                "• Ils peuvent vous aider pour diverses tâches\n"
-                "• Restez vigilant face aux demandes suspectes"
+    if query.data == 'how_works':
+        await query.edit_message_caption(
+            caption=(
+                "🔍 Comment notre système fonctionne :\n\n"
+                "• Algorithme exclusif de prédiction\n"
+                "• Analyse en temps réel\n"
+                "• Garantie de gains"
             ),
             reply_markup=reply_markup
         )
 
     elif query.data == 'payment_proof':
-        await query.edit_message_text(
-            text=(
-                "🛑 Preuve de paiement:\n\n"
-                "Voici les preuves de paiements réussis. Assurez-vous de suivre les instructions à la lettre pour éviter tout problème."
-            ),
+        await query.edit_message_caption(
+            caption="💸 Preuves de gains vérifiables !",
             reply_markup=reply_markup
         )
         for proof in CASINO_PROOFS:
-            await query.message.reply_photo(photo=proof["url"], caption=proof["caption"])
+            await query.message.reply_photo(
+                photo=proof["url"], 
+                caption=proof["caption"]
+            )
 
-        await query.message.reply_photo(photo=FOOTER_IMAGE)
-
-# Fonction pour garder l'application active
+# Fonction pour maintenir le bot actif
 def keep_alive():
     def run():
-        app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
-
+        app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
     thread = threading.Thread(target=run)
     thread.start()
 
-# Ping du serveur toutes les 5 minutes
-def auto_ping():
-    while True:
-        try:
-            requests.get("https://newbottest-p886.onrender.com")  # Remplace par l'URL Render de ton app
-            logging.info("Ping envoyé pour garder l'application active")
-        except Exception as e:
-            logging.error(f"Erreur lors du ping: {e}")
-        time.sleep(300)  # Ping toutes les 5 minutes
+# Fonction pour envoyer un signal de prédiction après 10 secondes
+def send_prediction_signal():
+    time.sleep(10)
+    # Envoyer un signal de prédiction
+    application.bot.send_message(
+        chat_id=os.getenv('CHAT_ID'),
+        text="🎯 Signal de prédiction Aviator: Gagnez maintenant!"
+    )
 
-
+# Fonction principale
 def main():
     global application
-    token = os.getenv("TELEGRAM_BOT_TOKEN")
-    if not token:
-        logging.error("Token Telegram manquant!")
-        return
+    try:
+        application = Application.builder().token(TOKEN).build()
 
-    application = Application.builder().token(token).build()
+        application.add_handler(CommandHandler("start", start))
+        application.add_handler(CallbackQueryHandler(handle_button))
 
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CallbackQueryHandler(handle_button))
+        keep_alive()
 
-    keep_alive()
+        # Thread pour envoyer un signal de prédiction après 10 secondes
+        prediction_thread = threading.Thread(target=send_prediction_signal)
+        prediction_thread.daemon = True
+        prediction_thread.start()
 
-    # Lancer la tâche de ping automatique
-    ping_thread = threading.Thread(target=auto_ping)
-    ping_thread.start()
+        # Lancer le bot
+        application.run_polling()
 
-    logging.info("Bot démarré et en cours d'exécution...")
-
-    # Utilisation du webhook pour éviter les conflits
-    WEBHOOK_URL = "https://ton-app-render-url.com"  # Remplace par l'URL de ton app Render
-    application.run_webhook(
-        listen="0.0.0.0",
-        port=int(os.environ.get('PORT', 8080)),
-        webhook_url=f"{WEBHOOK_URL}/{token}"
-    )
+    except Exception as e:
+        logging.error(f"Erreur de démarrage du bot: {e}")
 
 if __name__ == '__main__':
     main()
