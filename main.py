@@ -19,14 +19,12 @@ app = Flask(__name__)
 def home():
     return "Bot actif!"
 
-# Configuration des messages et images
-WELCOME_IMAGE = "https://i.pinimg.com/originals/e3/bd/c0/e3bdc0eb3a3addb16affb830442286d2.png"
-TEXT_PRINCIPAL = (
-    "BILL GATES, BONJOUR !\n\n"
-    "Je suis un programmeur vénézuélien et je connais la combine pour retirer l'argent du jeu des casinos.\n\n"
-    "1800 personnes ont déjà gagné avec moi. Et je peux vous garantir en toute confiance que vous gagnerez.\n\n"
-    "Vous pouvez gagner de l'argent sans rien faire, car j'ai déjà fait tout le programme pour vous."
-)
+# Configuration des messages et médias
+IMAGE_PRINCIPALE_1 = "https://i.pinimg.com/originals/e3/bd/c0/e3bdc0eb3a3addb16affb830442286d2.png"
+TEXTE_PRINCIPAL_1 = "🌪 Programme de gains au casino 💰\n\n1800 personnes ont déjà gagné avec notre méthode unique.\n\nGagnez de l'argent sans effort !"
+VIDEO_URL = "https://youtube.com/shorts/wCvzIiQTT_4?si=MYYP5TR-BPr_x0VW"
+TEXTE_PRINCIPAL_2 = "🏆 Témoignages de nos gagnants !"
+FOOTER_IMAGE = "https://aviator.com.in/wp-content/uploads/2024/04/Aviator-Predictor-in-India.webp"
 
 CASINO_PROOFS = [
     {"url": "https://example.com/proof1.jpg", "caption": "💸 Preuve #1 - Alice: 500€"},
@@ -38,18 +36,29 @@ TOKEN = '7184666905:AAFd2arfmIFZ86cp9NNVp57dKkH6hAVi4iM'  # Remplacez ce token p
 
 # Fonction de démarrage du bot
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Envoyer l'image principale 1
+    await update.message.reply_photo(photo=IMAGE_PRINCIPALE_1)
+
+    # Envoyer le texte principal 1
+    await update.message.reply_text(TEXTE_PRINCIPAL_1)
+
+    # Envoyer la vidéo
+    await update.message.reply_video(video=VIDEO_URL)
+
+    # Envoyer le texte principal 2
+    await update.message.reply_text(TEXTE_PRINCIPAL_2)
+
+    # Afficher les boutons
     keyboard = [
         [InlineKeyboardButton("💡 Comment ça marche", callback_data='how_works')],
-        [InlineKeyboardButton("💰 Retrait du casino", callback_data='casino_withdrawal')],
+        [InlineKeyboardButton("💰 Preuve de paiement", callback_data='payment_proof')],
         [InlineKeyboardButton("📞 Contactez-nous", url="https://t.me/support_casino_bot")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text("Choisissez une option :", reply_markup=reply_markup)
 
-    await update.message.reply_photo(
-        photo=WELCOME_IMAGE, 
-        caption=TEXT_PRINCIPAL,
-        reply_markup=reply_markup
-    )
+    # Envoyer l'image en bas des boutons
+    await update.message.reply_photo(photo=FOOTER_IMAGE)
 
 # Fonction pour gérer les boutons
 async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -57,16 +66,16 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
 
     if query.data == 'how_works':
-        await query.edit_message_caption(
-            caption=(
+        await query.edit_message_text(
+            text=(
                 "🔍 Comment notre système fonctionne :\n\n"
                 "• Algorithme exclusif de prédiction\n"
                 "• Analyse en temps réel\n"
                 "• Garantie de gains"
             )
         )
-    elif query.data == 'casino_withdrawal':
-        await query.edit_message_caption(caption="💸 Preuves de gains vérifiables !")
+    elif query.data == 'payment_proof':
+        await query.message.reply_text("💸 Voici les preuves de paiement vérifiables :")
         for proof in CASINO_PROOFS:
             await query.message.reply_photo(
                 photo=proof["url"], 
