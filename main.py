@@ -26,20 +26,20 @@ MAIN_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_s
 
 # Images pour les preuves de paiement
 PAYMENT_PROOF_IMAGES = [
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",  # Image 1
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",  # Image 2
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",  # Image 3
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",  # Image 4
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png"   # Image 5
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png"
 ]
 
 # Images pour les informations
 INFO_IMAGES = [
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",  # Info Image 1
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",  # Info Image 2
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",  # Info Image 3
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",  # Info Image 4
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png"   # Info Image 5
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png"
 ]
 
 def create_keyboard():
@@ -47,7 +47,7 @@ def create_keyboard():
     keyboard = [
         [InlineKeyboardButton("🔴 Informations sur les bots", callback_data='info_bots')],
         [InlineKeyboardButton("🔵 Retrait du casino", callback_data='casino_withdrawal')],
-        [InlineKeyboardButton("✍️ Écrivez-moi à", callback_data='write_to_me')]
+        [InlineKeyboardButton("✍️ Écrivez-moi à", url="https://t.me/judespronos")]
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -74,33 +74,29 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
 
     if query.data == 'casino_withdrawal':
-        # Envoie les 5 images de preuve de paiement
+        # Envoie d'abord le message explicatif
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="🎰 Voici les derniers retraits effectués par nos utilisateurs ! Des gains garantis avec notre méthode unique. N'attendez plus pour nous rejoindre et commencer à gagner. 💰"
+        )
+        # Puis envoie les images
         media_group = [InputMediaPhoto(media=url) for url in PAYMENT_PROOF_IMAGES]
         await context.bot.send_media_group(
             chat_id=update.effective_chat.id,
             media=media_group
         )
-        await query.edit_message_caption(
-            caption="Voici les preuves de paiement récentes ! 💰\nContactez-nous pour plus d'informations.",
-            reply_markup=create_keyboard()
-        )
     
     elif query.data == 'info_bots':
-        # Envoie les 5 images d'information
+        # Envoie d'abord le message explicatif
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="🤖 Découvrez notre technologie unique qui permet de gagner à coup sûr. Notre bot utilise un algorithme sophistiqué pour garantir des gains constants. Plus de 1800 utilisateurs satisfaits ! 🚀"
+        )
+        # Puis envoie les images
         media_group = [InputMediaPhoto(media=url) for url in INFO_IMAGES]
         await context.bot.send_media_group(
             chat_id=update.effective_chat.id,
             media=media_group
-        )
-        await query.edit_message_caption(
-            caption="Voici les informations sur nos bots ! 🤖\nContactez-nous pour en savoir plus.",
-            reply_markup=create_keyboard()
-        )
-    
-    elif query.data == 'write_to_me':
-        await query.edit_message_caption(
-            caption="Contactez-moi directement pour commencer...",
-            reply_markup=create_keyboard()
         )
 
 def keep_alive():
