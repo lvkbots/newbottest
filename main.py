@@ -2,10 +2,8 @@ import os
 import logging
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
-from dotenv import load_dotenv
-from flask import Flask, request, jsonify
+from flask import Flask, request
 import threading
-import requests
 import time
 
 # Configuration du logging
@@ -13,7 +11,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
-load_dotenv()
 
 # Flask app pour garder le bot actif
 app = Flask(__name__)
@@ -34,17 +31,10 @@ CASINO_PROOFS = [
     {"url": "https://example.com/proof2.jpg", "caption": "💸 Preuve #2 - Bob: 750€"}
 ]
 
-# Endpoint pour le webhook
-@app.route(f'/{os.getenv("TELEGRAM_BOT_TOKEN")}', methods=['POST'])
-def webhook():
-    try:
-        update = Update.de_json(request.get_json(force=True), application.bot)
-        application.process_update(update)
-        return 'ok'
-    except Exception as e:
-        logging.error(f"Webhook error: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+# Token du bot
+TOKEN = '7184666905:AAFd2arfmIFZ86cp9NNVp57dKkH6hAVi4iM'  # Remplacez ce token par celui que vous avez
 
+# Fonction de démarrage du bot
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("💡 Comment ça marche", callback_data='how_works')],
@@ -59,6 +49,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup
     )
 
+# Fonction pour gérer les boutons
 async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -92,61 +83,40 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 caption=proof["caption"]
             )
 
-def send_prediction_signal():
-    # Fonction pour envoyer un signal de prédiction après 10 secondes
-    time.sleep(10)
-    # Code pour envoyer un message avec le signal de prédiction
-    application.bot.send_message(
-        chat_id=os.getenv('CHAT_ID'),
-        text="🎯 Signal de prédiction Aviator: Gagnez maintenant!"
-    )
-
+# Fonction pour maintenir le bot actif
 def keep_alive():
     def run():
         app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
     thread = threading.Thread(target=run)
     thread.start()
 
-def auto_ping():
-    while True:
-        try:
-            requests.get("https://newbottest-p886.onrender.com")
-            logging.info("Ping envoyé pour garder l'application active")
-        except Exception as e:
-            logging.error(f"Erreur lors du ping: {e}")
-        time.sleep(300)
+# Fonction pour envoyer un signal de prédiction après 10 secondes
+def send_prediction_signal():
+    time.sleep(10)
+    # Envoyer un signal de prédiction
+    application.bot.send_message(
+        chat_id=os.getenv('CHAT_ID'),
+        text="🎯 Signal de prédiction Aviator: Gagnez maintenant!"
+    )
 
+# Fonction principale
 def main():
     global application
-    token = os.getenv("TELEGRAM_BOT_TOKEN")
-    if not token:
-        logging.error("Token Telegram manquant!")
-        return
-
     try:
-        application = Application.builder().token(token).build()
+        application = Application.builder().token(TOKEN).build()
 
         application.add_handler(CommandHandler("start", start))
         application.add_handler(CallbackQueryHandler(handle_button))
 
         keep_alive()
 
-        ping_thread = threading.Thread(target=auto_ping)
-        ping_thread.daemon = True
-        ping_thread.start()
+        # Thread pour envoyer un signal de prédiction après 10 secondes
+        prediction_thread = threading.Thread(target=send_prediction_signal)
+        prediction_thread.daemon = True
+        prediction_thread.start()
 
-        WEBHOOK_URL = "https://newbottest-p886.onrender.com"
-        application.run_webhook(
-            listen="0.0.0.0",
-            port=int(os.environ.get('PORT', 10000)),
-            url_path=token,
-            webhook_url=f"{WEBHOOK_URL}/{token}"
-        )
-
-        # Envoi du signal de prédiction toutes les 10 secondes
-        send_prediction_thread = threading.Thread(target=send_prediction_signal)
-        send_prediction_thread.daemon = True
-        send_prediction_thread.start()
+        # Lancer le bot
+        application.run_polling()
 
     except Exception as e:
         logging.error(f"Erreur de démarrage du bot: {e}")
