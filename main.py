@@ -1,10 +1,12 @@
 import logging
 import os
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto, InputMediaVideo
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
-from flask import Flask
+import requests
 import threading
+from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
+from flask import Flask, request
 from datetime import datetime
+import time
 
 # Configuration du logging
 logging.basicConfig(
@@ -16,43 +18,28 @@ logging.basicConfig(
     ]
 )
 
-logger = logging.getLogger(name)
+logger = logging.getLogger(__name__)
 
 # Flask app pour garder le bot actif
-app = Flask(name)
+app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return f"Bot actif et opérationnel depuis {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    return "Bot actif et opérationnel!"
 
-# Token du bot
+# Token du bot (défini directement ici)
 TOKEN = '7184666905:AAFd2arfmIFZ86cp9NNVp57dKkH6hAVi4iM'
 
+# URL de votre domaine sur Render
+RENDER_URL = 'https://newbottest-p886.onrender.com'
+
 # Médias
-INTRO_VIDEO = "https://drive.google.com/uc?export=download&id=1NREjyyYDfdgGtx4r-Lna-sKgpCHIC1ia"  # À remplacer par l'URL de votre vidéo
+INTRO_VIDEO = "https://drive.google.com/uc?export=download&id=1NREjyyYDfdgGtx4r-Lna-sKgpCHIC1ia"
 MAIN_IMAGE = "https://i.ytimg.com/vi/KolFup7TxOM/hq720.jpg"
-BOTTOM_IMAGE = "https://aviator.com.in/wp-content/uploads/2024/04/Aviator-Predictor-in-India.png"  # À remplacer par l'URL de l'image du bas
+BOTTOM_IMAGE = "https://aviator.com.in/wp-content/uploads/2024/04/Aviator-Predictor-in-India.png"
 
-# Images pour les preuves de paiement
-PAYMENT_PROOF_IMAGES = [
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png"
-]
-
-# Images pour les informations
-INFO_IMAGES = [
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png"
-]
-
+# Fonction pour créer les boutons
 def create_keyboard():
-    """Crée le clavier avec les boutons"""
     keyboard = [
         [InlineKeyboardButton("🎯 Informations sur les bots", callback_data='info_bots')],
         [InlineKeyboardButton("💰 Retrait du casino", callback_data='casino_withdrawal')],
@@ -60,11 +47,7 @@ def create_keyboard():
     ]
     return InlineKeyboardMarkup(keyboard)
 
-def create_program_button():
-    """Crée le bouton pour obtenir le programme"""
-    keyboard = [[InlineKeyboardButton("🚀 OBTENIR LE PROGRAMME MAINTENANT", url="https://t.me/judespronos")]]
-    return InlineKeyboardMarkup(keyboard)
-
+# Fonction de démarrage
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Gère la commande /start"""
     try:
@@ -76,7 +59,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         # Message principal avec image
-        message = """🎯 BILL GATES, BONJOUR ❗️
+        message = f"""🎯 BILL GATES, BONJOUR ❗️
 
 Je suis un programmeur vénézuélien et je connais la combine pour retirer l'argent du jeu des casinos.
 
@@ -91,7 +74,9 @@ Je suis un programmeur vénézuélien et je connais la combine pour retirer l'ar
             photo=MAIN_IMAGE,
             caption=message,
             reply_markup=reply_markup
-        ) # Envoie l'image du bas
+        )
+
+        # Envoie de l'image du bas
         await context.bot.send_photo(
             chat_id=update.effective_chat.id,
             photo=BOTTOM_IMAGE,
@@ -103,14 +88,13 @@ Je suis un programmeur vénézuélien et je connais la combine pour retirer l'ar
     except Exception as e:
         logger.error(f"Erreur lors du démarrage: {e}")
 
+# Fonction pour gérer les clics sur les boutons
 async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Gère les clics sur les boutons"""
     query = update.callback_query
     await query.answer()
 
     try:
         if query.data == 'casino_withdrawal':
-            # Message initial
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
                 text="""🎰 PREUVES DE PAIEMENT RÉCENTES 🎰
@@ -138,7 +122,6 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
     
         elif query.data == 'info_bots':
-            # Message initial
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
                 text="""🤖 NOTRE TECHNOLOGIE UNIQUE 🤖
@@ -151,14 +134,12 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 👇 Découvrez notre système en images 👇"""
             )
             
-            # Envoi des images
             media_group = [InputMediaPhoto(media=url) for url in INFO_IMAGES]
             await context.bot.send_media_group(
                 chat_id=update.effective_chat.id,
                 media=media_group
             )
             
-            # Bouton final
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
                 text="🚀 Prêt à révolutionner vos gains ?",
@@ -174,33 +155,56 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text="Une erreur est survenue. Veuillez réessayer."
         )
 
+# Webhook handler
+@app.route(f'/{TOKEN}', methods=['POST'])
+def webhook():
+    """Recevoir les mises à jour Telegram via un webhook"""
+    json_str = request.get_data().decode('UTF-8')
+    update = Update.de_json(json_str, application.bot)
+    application.process_update(update)
+    return 'OK', 200
+
 def keep_alive():
-    """Maintient le bot actif avec Flask"""
-    def run():
-        app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
-    thread = threading.Thread(target=run)
+    """Maintient le bot actif avec Flask et envoie des pings toutes les 2 secondes"""
+    def ping_render():
+        while True:
+            try:
+                response = requests.get(RENDER_URL)  # Envoi d'un ping à votre URL Render
+                if response.status_code == 200:
+                    logger.info("Ping réussi. Le bot est actif.")
+                else:
+                    logger.warning(f"Échec du ping: {response.status_code}")
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Erreur lors de l'envoi du ping: {e}")
+
+            time.sleep(2)  # Attendre 2 secondes avant de pinguer à nouveau
+    
+    thread = threading.Thread(target=ping_render)
+    thread.daemon = True
     thread.start()
 
 def main():
     """Fonction principale pour démarrer le bot"""
     try:
-        # Création de l'application
+        global application
         application = Application.builder().token(TOKEN).build()
 
         # Ajout des gestionnaires
         application.add_handler(CommandHandler("start", start))
         application.add_handler(CallbackQueryHandler(handle_button))
 
-        # Maintenir le bot actif avec Flask
+        # Configurer le webhook
+        application.bot.set_webhook(f"{RENDER_URL}/{TOKEN}")
+
+        # Démarrer l'application Flask
         keep_alive()
 
-        # Lancer le bot
         logger.info("Bot démarré avec succès!")
-        application.run_polling()
+        application.run_polling()  # Utilisation du polling si vous ne souhaitez pas webhooks
 
     except Exception as e:
         logger.critical(f"Erreur fatale: {e}")
         raise
 
-if name == 'main':
+if __name__ == '__main__':
     main()
