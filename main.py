@@ -1,6 +1,6 @@
 import logging
 import os
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto, InputMediaVideo
+from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 from flask import Flask
 import threading
@@ -16,10 +16,10 @@ logging.basicConfig(
     ]
 )
 
-logger = logging.getLogger(name)
+logger = logging.getLogger(__name__)  # Utilisez __name__ ici
 
 # Flask app pour garder le bot actif
-app = Flask(name)
+app = Flask(__name__)  # Utilisez __name__ ici
 
 @app.route('/')
 def home():
@@ -202,5 +202,5 @@ def main():
         logger.critical(f"Erreur fatale: {e}")
         raise
 
-if name == 'main':
+if __name__ == '__main__':
     main()
