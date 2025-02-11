@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 # Token et URL depuis les variables d'environnement
-TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+TOKEN = os.getenv('7184666905:AAFd2arfmIFZ86cp9NNVp57dKkH6hAVi4iM')
 RENDER_URL = os.getenv('RENDER_URL')
 PORT = int(os.getenv('PORT', 10000))
 
