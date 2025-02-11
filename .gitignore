@@ -1,8 +1,35 @@
-.env
-__pycache__/
+# Fichiers et dossiers temporaires Python
 *.pyc
 *.pyo
 *.pyd
-.Python
-db.sqlite3
-.env.*
+__pycache__/
+*.db
+*.sqlite3
+
+# Environnements virtuels
+venv/
+env/
+.venv/
+
+# Dossiers de dépendances
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Fichiers générés par l'IDE
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Fichiers de configuration de systèmes ou d'OS
+.DS_Store   # macOS
+Thumbs.db   # Windows
+
+# Fichiers secrets
+.env         # Ne jamais versionner les fichiers contenant des clés API ou secrets
+*.env
+
+# Déploiement
+/render.yaml  # Si vous ne voulez pas versionner ce fichier de configuration, sinon omettez-le
