@@ -1,5 +1,7 @@
 import logging
 import os
+import time
+import requests
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto, InputMediaVideo
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 from flask import Flask
@@ -29,9 +31,9 @@ def home():
 TOKEN = '7184666905:AAFd2arfmIFZ86cp9NNVp57dKkH6hAVi4iM'
 
 # Médias
-INTRO_VIDEO = "https://drive.google.com/uc?export=download&id=1NREjyyYDfdgGtx4r-Lna-sKgpCHIC1ia"  # À remplacer par l'URL de votre vidéo
-MAIN_IMAGE = "https://i.ytimg.com/vi/KolFup7TxOM/hq720.jpg"
-BOTTOM_IMAGE = "https://aviator.com.in/wp-content/uploads/2024/04/Aviator-Predictor-in-India.png"  # À remplacer par l'URL de l'image du bas
+INTRO_VIDEO = "URL_DE_VOTRE_VIDEO"  # À remplacer par l'URL de votre vidéo
+MAIN_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png"
+BOTTOM_IMAGE = "URL_DE_VOTRE_IMAGE_BAS"  # À remplacer par l'URL de l'image du bas
 
 # Images pour les preuves de paiement
 PAYMENT_PROOF_IMAGES = [
@@ -176,12 +178,31 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text="Une erreur est survenue. Veuillez réessayer."
         )
 
+def ping_server():
+    """Fonction pour faire un ping régulier du serveur"""
+    while True:
+        try:
+            # Faire une requête à votre propre URL
+            response = requests.get(f"https://{os.environ.get('RENDER_EXTERNAL_URL', 'your-app.onrender.com')}")
+            logger.info(f"Ping serveur effectué - Status: {response.status_code}")
+        except Exception as e:
+            logger.error(f"Erreur lors du ping: {e}")
+        time.sleep(300)  # Attendre 5 minutes avant le prochain ping
+
 def keep_alive():
-    """Maintient le bot actif avec Flask"""
-    def run():
+    """Maintient le bot actif avec Flask et le système de ping"""
+    def run_flask():
         app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
-    thread = threading.Thread(target=run)
-    thread.start()
+    
+    # Thread pour Flask
+    flask_thread = threading.Thread(target=run_flask)
+    flask_thread.daemon = True
+    flask_thread.start()
+    
+    # Thread pour le ping automatique
+    ping_thread = threading.Thread(target=ping_server)
+    ping_thread.daemon = True
+    ping_thread.start()
 
 def main():
     """Fonction principale pour démarrer le bot"""
@@ -193,7 +214,7 @@ def main():
         application.add_handler(CommandHandler("start", start))
         application.add_handler(CallbackQueryHandler(handle_button))
 
-        # Maintenir le bot actif avec Flask
+        # Maintenir le bot actif avec Flask et le système de ping
         keep_alive()
 
         # Lancer le bot
