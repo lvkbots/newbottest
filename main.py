@@ -29,7 +29,7 @@ app = Flask(__name__)
 
 # Token et URL depuis les variables d'environnement
 TOKEN = os.getenv('7184666905:AAFd2arfmIFZ86cp9NNVp57dKkH6hAVi4iM')
-RENDER_URL = os.getenv('RENDER_URL')
+RENDER_URL = os.getenv('https://newbottest-p886.onrender.com')
 PORT = int(os.getenv('PORT', 10000))
 
 # URL du webhook
