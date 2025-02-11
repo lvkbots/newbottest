@@ -1,10 +1,10 @@
 import logging
 import os
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto, InputMediaVideo
+from datetime import datetime
+from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 from flask import Flask, request
 import threading
-from datetime import datetime
 import requests
 import time
 from dotenv import load_dotenv
