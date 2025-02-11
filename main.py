@@ -1,12 +1,14 @@
-import logging
 import os
-import time
-import requests
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto, InputMediaVideo
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
-from flask import Flask
-import threading
+import logging
 from datetime import datetime
+from dotenv import load_dotenv
+from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
+from flask import Flask, request
+import requests
+
+# Charger les variables d'environnement
+load_dotenv()
 
 # Configuration du logging
 logging.basicConfig(
@@ -20,38 +22,29 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-# Flask app pour garder le bot actif
+# Configuration
+TOKEN = os.getenv('TELEGRAM_TOKEN', '7184666905:AAFd2arfmIFZ86cp9NNVp57dKkH6hAVi4iM')
+PORT = int(os.getenv('PORT', 10000))
+WEBHOOK_URL = os.getenv('WEBHOOK_URL', 'https://your-app.onrender.com')
+
+# Flask app
 app = Flask(__name__)
-
-@app.route('/')
-def home():
-    return f"Bot actif et opérationnel depuis {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-
-# Token du bot
-TOKEN = '7184666905:AAFd2arfmIFZ86cp9NNVp57dKkH6hAVi4iM'
+bot_app = None  # Pour stocker l'instance de l'application du bot
 
 # Médias
-INTRO_VIDEO = "URL_DE_VOTRE_VIDEO"  # À remplacer par l'URL de votre vidéo
-MAIN_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png"
-BOTTOM_IMAGE = "URL_DE_VOTRE_IMAGE_BAS"  # À remplacer par l'URL de l'image du bas
+INTRO_VIDEO = os.getenv('INTRO_VIDEO', "URL_DE_VOTRE_VIDEO")
+MAIN_IMAGE = os.getenv('MAIN_IMAGE', "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png")
+BOTTOM_IMAGE = os.getenv('BOTTOM_IMAGE', "URL_DE_VOTRE_IMAGE_BAS")
 
 # Images pour les preuves de paiement
 PAYMENT_PROOF_IMAGES = [
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
     "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png"
-]
+] * 5  # Répété 5 fois
 
 # Images pour les informations
 INFO_IMAGES = [
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png",
     "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Circle_sign_2.svg/1024px-Circle_sign_2.svg.png"
-]
+] * 5  # Répété 5 fois
 
 def create_keyboard():
     """Crée le clavier avec les boutons"""
@@ -78,7 +71,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         # Message principal avec image
-        message = """🎯 BILL GATES, BONJOUR ❗
+        message = f"""🎯 BILL GATES, BONJOUR ❗
 
 Je suis un programmeur vénézuélien et je connais la combine pour retirer l'argent du jeu des casinos.
 
@@ -178,52 +171,63 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text="Une erreur est survenue. Veuillez réessayer."
         )
 
-def ping_server():
-    """Fonction pour faire un ping régulier du serveur"""
-    while True:
-        try:
-            # Faire une requête à votre propre URL
-            response = requests.get(f"https://{os.environ.get('RENDER_EXTERNAL_URL', 'your-app.onrender.com')}")
-            logger.info(f"Ping serveur effectué - Status: {response.status_code}")
-        except Exception as e:
-            logger.error(f"Erreur lors du ping: {e}")
-        time.sleep(300)  # Attendre 5 minutes avant le prochain ping
+@app.route('/')
+def home():
+    """Page d'accueil simple"""
+    return f"Bot actif et opérationnel depuis {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
 
-def keep_alive():
-    """Maintient le bot actif avec Flask et le système de ping"""
-    def run_flask():
-        app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
-    
-    # Thread pour Flask
-    flask_thread = threading.Thread(target=run_flask)
-    flask_thread.daemon = True
-    flask_thread.start()
-    
-    # Thread pour le ping automatique
-    ping_thread = threading.Thread(target=ping_server)
-    ping_thread.daemon = True
-    ping_thread.start()
+@app.route(f'/{TOKEN}', methods=['POST'])
+async def webhook():
+    """Gestion des webhooks de Telegram"""
+    if request.method == "POST":
+        await bot_app.update_queue.put(Update.de_json(request.get_json(), bot_app.bot))
+        return "ok"
+    return "only POST requests are accepted"
 
-def main():
-    """Fonction principale pour démarrer le bot"""
+async def setup_webhook():
+    """Configure le webhook"""
+    webhook_url = f"{WEBHOOK_URL}/{TOKEN}"
+    await bot_app.bot.set_webhook(url=webhook_url)
+    logger.info(f"Webhook configuré sur {webhook_url}")
+
+async def main():
+    """Fonction principale"""
+    global bot_app
+    
     try:
         # Création de l'application
-        application = Application.builder().token(TOKEN).build()
+        bot_app = Application.builder().token(TOKEN).build()
 
         # Ajout des gestionnaires
-        application.add_handler(CommandHandler("start", start))
-        application.add_handler(CallbackQueryHandler(handle_button))
+        bot_app.add_handler(CommandHandler("start", start))
+        bot_app.add_handler(CallbackQueryHandler(handle_button))
 
-        # Maintenir le bot actif avec Flask et le système de ping
-        keep_alive()
+        # Configuration du webhook
+        await setup_webhook()
 
-        # Lancer le bot
+        # Démarrage de l'application Flask
         logger.info("Bot démarré avec succès!")
-        application.run_polling()
-
+        return bot_app
+    
     except Exception as e:
         logger.critical(f"Erreur fatale: {e}")
         raise
 
 if __name__ == '__main__':
-    main()
+    # Créer le fichier .env avec les variables nécessaires
+    from pathlib import Path
+    env_path = Path('.env')
+    if not env_path.exists():
+        with open(env_path, 'w') as f:
+            f.write(f"""TELEGRAM_TOKEN={TOKEN}
+WEBHOOK_URL={WEBHOOK_URL}
+PORT={PORT}
+""")
+    
+    # Démarrer l'application
+    from asyncio import get_event_loop
+    loop = get_event_loop()
+    loop.run_until_complete(main())
+    
+    # Démarrer Flask avec gunicorn
+    app.run(host='0.0.0.0', port=PORT)
